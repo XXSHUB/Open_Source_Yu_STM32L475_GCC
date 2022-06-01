@@ -186,7 +186,8 @@ $(BUILD_DIR):
 # clean up
 #######################################
 clean:
-	-rm -fR $(BUILD_DIR)
+	# -rm -fR $(BUILD_DIR)
+		-del /q $(BUILD_DIR)
 
 download:
 	openocd -f C:/XYZ/Program/OpenOCD-0.11.0/share/openocd/scripts/interface/cmsis-dap.cfg -f C:/XYZ/Program/OpenOCD-0.11.0/share/openocd/scripts/target/stm32l4x.cfg  -c init -c halt -c "flash write_image erase ./build/$(TARGET).hex" -c reset -c halt -c shutdown

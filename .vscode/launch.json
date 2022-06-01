@@ -22,7 +22,7 @@
       "svdFile": "./STM32L4x5.svd",  //https://github.com/posborne/cmsis-svd
       "interface": "swd",           
       "armToolchainPath":"C:/XYZ/Program/gcc-arm-none-eabi-10.3-2021.10-win32/bin/",
-      "preLaunchTask": "Download"
+      "preLaunchTask": "Build_Download"
     },
   ]
 }

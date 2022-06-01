@@ -1,34 +1,73 @@
 {
-  // See https://go.microsoft.com/fwlink/?LinkId=733558
+	// See https://go.microsoft.com/fwlink/?LinkId=733558
   // for the documentation about the tasks.json format
-  "version": "2.0.0",
-  "tasks": [
-    {
-          "label": "Build",
-          "type": "shell",
-          "options": {
-              "cwd": "${workspaceRoot}"
-          },
-          "command": "make",
-          "group": {
-              "kind": "build",
-              "isDefault": true
-          },
-          "problemMatcher": []
-      },
-      {
-          "label": "Download",
-          "type": "shell",
-          "options": {
-              "cwd": "${workspaceRoot}"
-          },
-          "command": "make download",
-          "group": {
-              "kind": "build",
-              "isDefault": true
-          },
-          "dependsOn":"Build",
-          "problemMatcher": []
-      }
-  ]
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "shell",
+			"label": "Build",
+			"command": "make",
+			// "detail": "Build with mingw32-make.exe",
+			"problemMatcher": [],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			}
+		},
+		{
+			"type": "shell",
+			"label": "Rebuild",
+			"command": "make clean && make -j",
+			// "detail": "Rebuild with mingw32-make.exe",
+			"problemMatcher": [],
+            "group": {
+				"kind": "build",
+				"isDefault": true
+			}
+		},
+        {
+            "label": "Build_Download",
+            "type": "shell",
+            "options": {
+                "cwd": "${workspaceRoot}"
+            },
+            "command": "make download",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "dependsOn":"Build",
+            "problemMatcher": []
+        },
+		{
+			"label": "Build&Burn",
+			"type": "shell",
+			"command": "openocd",
+			"args": [
+				"-f",
+				"interface/stlink.cfg",
+				"-f",
+				"target/stm32f1x.cfg",
+				"-c",
+				"program build/VSCodeTest.bin verify reset exit 0x08000000"
+			],
+			"dependsOn": [
+				"Build"
+			],
+			"detail": "Build then Burn with OpenOCD",
+			"problemMatcher": []
+		}/*,
+		{
+			"label": "reset",
+			"type": "shell",
+			"command": "STM32_Programmer_CLI",
+			"args": [
+				"-c",
+				"port=SWD",
+				"-hardRst"
+			],
+			"detail": "Reset target device",
+			"problemMatcher": []
+		}*/
+	]
 }
