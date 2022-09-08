@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "dma.h"
 #include "usart.h"
 #include "gpio.h"
 
@@ -54,8 +55,7 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-  uint8_t rx_buff[1];
-  uint32_t i;
+  USART_TYPE  Usart_RX;
 /* USER CODE END 0 */
 
 /**
@@ -86,18 +86,22 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-  HAL_UART_Receive_IT(&huart1,rx_buff,1);
+  	Usart_RX.s=0;Usart_RX.sv=0;
+	 __HAL_UART_CLEAR_IDLEFLAG(&huart1); 
+  /* 使能串口空闲中断 */
+  __HAL_UART_ENABLE_IT(&huart1, UART_IT_IDLE); 
+  /* 配置串口 DMA接收 */
+	HAL_UART_Receive_DMA(&huart1, Usart_RX.DMA_pData, USART_MAX_LEN);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
-  {
-    i++;
-    HAL_Delay(1000);      
-    HAL_GPIO_TogglePin(LED_GPIO_Port,LED_Pin);
+  {    
+    UART_RxProtocol();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -154,10 +158,54 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+/**
+  * @brief  串口空闲处理函数
+  */
+void UsartReceive_IDLE(UART_HandleTypeDef *huart)  
+{  
+    if((__HAL_UART_GET_FLAG(huart,UART_FLAG_IDLE) != RESET))  
+    {   
+        __HAL_UART_CLEAR_IDLEFLAG(huart); /* 清除串口空闲中断标志 */
+				Usart_RX.s=USART_MAX_LEN - __HAL_DMA_GET_COUNTER(huart->hdmarx); 
+    }  
+}
+
+/**
+  * @brief  串口接收回调函数
+  */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
-  if (huart->Instance == huart1.Instance)
-     {HAL_UART_Receive_IT(&huart1,rx_buff,1); }
+	Usart_RX.s=0;//接收数据到缓冲区的尾部时从0开始
+}
+
+/**
+  * @brief  更新指针保证及时处理数据，采用乒乓Buffer想法
+  */
+void HAL_UART_RxHalfCpltCallback(UART_HandleTypeDef *huart) 
+{
+	Usart_RX.s=USART_MAX_LEN/2;//接收数据到缓冲区的一半时更新
+}
+
+/**
+  * @brief  串口接收处理主函数，放main里运行
+  */
+void UART_RxProtocol(void)
+{
+	uint8_t len;
+	if(Usart_RX.s!=Usart_RX.sv) //但指针不等时说明有数据待处理
+  {
+    /* len为待处理数据的长度 */
+    // len=(Usart_RX.s>Usart_RX.sv)?(Usart_RX.s-Usart_RX.sv):(USART_MAX_LEN+Usart_RX.s-Usart_RX.sv);
+    /*     
+    处理的主函数，可以做数据的搬运，也可以直接处理数据
+    处理数据后需更新Usart_RX.sv，可以一个一个字节处理，也可以一次性处理len长度
+     */
+    HAL_UART_Transmit(&huart1,Usart_RX.DMA_pData+Usart_RX.sv,1,0xff);
+    Usart_RX.sv++;
+    if(Usart_RX.sv>=USART_MAX_LEN)
+    Usart_RX.sv=0;
+  }
 }
 /* USER CODE END 4 */
 

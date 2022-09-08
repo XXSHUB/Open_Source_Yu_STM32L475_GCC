@@ -60,7 +60,19 @@ void Error_Handler(void);
 #define LED_Pin GPIO_PIN_8
 #define LED_GPIO_Port GPIOE
 /* USER CODE BEGIN Private defines */
-
+#define USART_MAX_LEN 5 //必须为偶数
+typedef struct  
+{ 	
+	uint8_t  receive_flag:1;     //start flag
+	uint8_t  finish_flag:1;      //finish flag	
+	uint16_t Size;               //length
+	uint8_t  sv;
+	uint8_t  s;
+	uint8_t len;	
+	uint8_t  DMA_pData[USART_MAX_LEN];     //DMA receive buffer	
+}USART_TYPE;
+void UART_RxProtocol(void);
+void UsartReceive_IDLE(UART_HandleTypeDef *huart); 
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus
