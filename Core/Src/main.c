@@ -200,8 +200,9 @@ void UART_RxProtocol(void)
     /*     
     处理的主函数，可以做数据的搬运，也可以直接处理数据
     处理数据后需更新Usart_RX.sv，可以一个一个字节处理，也可以一次性处理len长度
+    注：处理速度和发送速度必须大于接收速度，否则该方案完全不成立！
      */
-    HAL_UART_Transmit(&huart1,Usart_RX.DMA_pData+Usart_RX.sv,1,0xff);
+    HAL_UART_Transmit(&huart1,Usart_RX.DMA_pData+Usart_RX.sv,1,0xff);//echo仅做演示，实际不应该使用
     Usart_RX.sv++;
     if(Usart_RX.sv>=USART_MAX_LEN)
     Usart_RX.sv=0;
